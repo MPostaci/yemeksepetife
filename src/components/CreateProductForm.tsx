@@ -1,0 +1,265 @@
+import { ChangeEvent, useEffect, useState } from "react";
+import { useProductStore } from "../stores/useProductStore";
+import { motion } from "framer-motion";
+import { Loader, PlusCircle, Upload } from "lucide-react";
+import { useCategoryStore } from "../stores/useCategoryStore";
+import { useRestaurantStore } from "../stores/useRestaurantStore";
+
+const CreateProductForm = () => {
+    const [newProduct, setNewProduct] = useState({
+        name: "",
+        categoryId: "",
+        price: "",
+        description: "",
+        restaurantId: "",
+        imageFile: null as File | null,
+    });
+
+    const { restaurants, getUsersRestaurants } = useRestaurantStore();
+    const { loading, addProduct } = useProductStore();
+    const { categories, getCategories } = useCategoryStore();
+
+    useEffect(() => {
+        getCategories();
+    }, [getCategories]);
+
+    useEffect(() => {
+        getUsersRestaurants();
+    }, [getUsersRestaurants]);
+
+    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setNewProduct((prev) => ({ ...prev, imageFile: file }));
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append("name", newProduct.name);
+        formData.append("categoryId", newProduct.categoryId);
+        formData.append("price", newProduct.price);
+        formData.append("description", newProduct.description);
+        formData.append("restaurantId", newProduct.restaurantId);
+        if (newProduct.imageFile) {
+            formData.append("imageFile", newProduct.imageFile);
+        }
+
+        try {
+            // Pass formData instead of newProduct object
+            await addProduct(formData);
+            setNewProduct({
+                name: "",
+                price: "",
+                description: "",
+                categoryId: "",
+                restaurantId: "",
+                imageFile: null,
+            });
+        } catch (error) {
+            console.log("Adding product failed:", error);
+        }
+    };
+
+    return (
+        <motion.div
+            className="bg-gray-800 shadow-lg rounded-lg p-8 mb-8 max-w-xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+        >
+            <h2 className="text-2xl font-semibold mb-6 text-purple-300">
+                Yeni Ürün Oluştur
+            </h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-300"
+                    >
+                        Ürün Adı
+                    </label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value={newProduct.name}
+                        onChange={(e) =>
+                            setNewProduct({
+                                ...newProduct,
+                                name: e.target.value,
+                            })
+                        }
+                        className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2
+						 px-3 text-white focus:outline-none focus:ring-2
+						focus:ring-purple-500 focus:border-purple-500"
+                        required
+                    />
+                </div>
+                <div>
+                    <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-300"
+                    >
+                        Fiyat
+                    </label>
+                    <input
+                        type="number"
+                        id="price"
+                        name="price"
+                        value={newProduct.price}
+                        onChange={(e) =>
+                            setNewProduct({
+                                ...newProduct,
+                                price: e.target.value,
+                            })
+                        }
+                        className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2
+						 px-3 text-white focus:outline-none focus:ring-2
+						focus:ring-purple-500 focus:border-purple-500"
+                        required
+                    />
+                </div>
+                <div>
+                    <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-300"
+                    >
+                        Kategori
+                    </label>
+                    <select
+                        id="category"
+                        name="category"
+                        value={newProduct.categoryId}
+                        onChange={(e) =>
+                            setNewProduct({
+                                ...newProduct,
+                                categoryId: e.target.value,
+                            })
+                        }
+                        className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2
+						 px-3 text-white focus:outline-none focus:ring-2
+						focus:ring-purple-500 focus:border-purple-500"
+                        required
+                    >
+                        <option value="" disabled={true}>
+                            Bir kategori seciniz
+                        </option>
+                        {categories?.map((category) => (
+                            <option
+                                key={category.categoryId}
+                                value={category.categoryId}
+                            >
+                                {category.categoryName}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label
+                        htmlFor="description"
+                        className="block text-sm font-medium text-gray-300"
+                    >
+                        Açıklama
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        value={newProduct.description}
+                        onChange={(e) =>
+                            setNewProduct({
+                                ...newProduct,
+                                description: e.target.value,
+                            })
+                        }
+                        className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm
+						 py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 
+						 focus:border-purple-500"
+                        required
+                    />
+                </div>
+                <div>
+                    <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-300"
+                    >
+                        Restoran
+                    </label>
+                    <select
+                        id="restaurant"
+                        name="restaurant"
+                        value={newProduct.restaurantId}
+                        onChange={(e) =>
+                            setNewProduct({
+                                ...newProduct,
+                                restaurantId: e.target.value,
+                            })
+                        }
+                        className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2
+						 px-3 text-white focus:outline-none focus:ring-2
+						focus:ring-purple-500 focus:border-purple-500"
+                        required
+                    >
+                        <option value="" disabled={true}>
+                            Bir restoran seciniz
+                        </option>
+                        {restaurants?.map((restaurant) => (
+                            <option key={restaurant.id} value={restaurant.id}>
+                                {restaurant.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="mt-1 flex items-center">
+                    <input
+                        type="file"
+                        id="image"
+                        className="sr-only"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                    />
+                    <label
+                        htmlFor="image"
+                        className="cursor-pointer bg-gray-700 py-2 px-3 border border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    >
+                        <Upload className="h-5 w-5 inline-block mr-2" />
+                        Resim Ekle
+                    </label>
+                    {newProduct.imageFile && (
+                        <span className="ml-3 text-sm text-gray-400">
+                            Image uploaded{" "}
+                        </span>
+                    )}
+                </div>
+
+                <button
+                    type="submit"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md 
+					shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 
+					focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <>
+                            <Loader
+                                className="mr-2 h-5 w-5 animate-spin"
+                                aria-hidden="true"
+                            />
+                            Loading...
+                        </>
+                    ) : (
+                        <>
+                            <PlusCircle className="mr-2 h-5 w-5" />
+                            Ürün Oluştur
+                        </>
+                    )}
+                </button>
+            </form>
+        </motion.div>
+    );
+};
+
+export default CreateProductForm;
